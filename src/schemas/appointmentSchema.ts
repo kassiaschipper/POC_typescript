@@ -5,5 +5,5 @@ export const AppointmentSchema = Joi.object({
     appointmentDate: Joi.date().required(),
     appointmentAddress: Joi.string().required(),
     comments: Joi.string(), 
-    status: Joi.string().required(),
+    status: Joi.string().valid("Consulta Marcada", "Consulta Cancelada", "Consulta Realizada").required(),
 })
