@@ -7,3 +7,7 @@ export const AppointmentSchema = Joi.object({
     comments: Joi.string(), 
     status: Joi.string().valid("Consulta Marcada", "Consulta Cancelada", "Consulta Realizada").required(),
 })
+
+export const updateStatusSchema = Joi.object({
+    status: Joi.string().valid("Consulta Marcada", "Consulta Cancelada", "Consulta Realizada").required(),
+})

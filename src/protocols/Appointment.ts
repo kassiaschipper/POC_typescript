@@ -7,4 +7,6 @@ export type AppointmentEntity = {
     status: string,
 }
 
-export type Appointment = Omit<AppointmentEntity, "id" > 
+export type Appointment = Omit<AppointmentEntity, "id" >; 
+
+export type AppointmentStatus = Pick<AppointmentEntity, "status">;
