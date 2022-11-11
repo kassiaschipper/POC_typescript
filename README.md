@@ -22,12 +22,12 @@ It will also allow you to check how many appointments were registered with the s
 #### Filter appointments by status 
 
 ```http
-  GET /appointments/status
+  GET /appointments/status?status=
 ```
 
 | Parameter   | Type       | Description                                   |
 | :---------- | :--------- | :------------------------------------------ |
-| `status`      | `string` | **Required**. Query paramiter options :Consulta Marcada, Consulta Cancelada, Consulta Realizada) |
+| `status`      | `string` | **Required**. Query paramiter options: Consulta Marcada, Consulta Cancelada, Consulta Realizada |
 
 #### Appointments counting 
 
