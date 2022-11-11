@@ -1,5 +1,6 @@
 import { Request, Response } from "express";
 import connection from "../db/db.js";
+import { getAppointments, postAppointments, deleteAppointment, findAppointmentById, putAppointment, findAppointmentByStatus, getScheduledAppontments} from "../repositories/appointmentsRepository.js"
 import { AppointmentSchema, updateStatusSchema } from "../schemas/appointmentSchema.js";
 import { AppointmentEntity, Appointment, AppointmentStatus } from "../protocols/Appointment.js"
 import { QueryResult } from "pg";
@@ -8,7 +9,7 @@ import { QueryResult } from "pg";
 //CRUD - READ
 async function listAppointments(req:Request, res:Response){
     try {
-        const result:QueryResult<AppointmentEntity> = (await connection.query(`SELECT * FROM appointments;`));
+        const result:QueryResult<AppointmentEntity> = await getAppointments();;
         
         return res.send(result.rows)
     } catch (error) {
@@ -27,7 +28,8 @@ async function insertAppointment(req:Request, res:Response){
         if(error){ 
             return res.status(400).send({erro: error.message})
         }
-        await connection.query(`INSERT INTO appointments ("specialistDoctor", "appointmentDate", "appointmentAddress", comments, status) VALUES ($1, $2, $3, $4, $5);`,[specialistDoctor, appointmentDate, appointmentAddress, comments, status ])
+        
+        const insert:Promise<QueryResult> = postAppointments(specialistDoctor, appointmentDate, appointmentAddress, comments, status)
         
         return res.send("Ok"); 
 
@@ -38,17 +40,17 @@ async function insertAppointment(req:Request, res:Response){
 }
 
 //CRUD - DELETE
-async function deleteAppointment (req:Request, res:Response){
+async function deleteAppointments (req:Request, res:Response){
     const { id } = req.params;
 
     try {
-        const findId:number[] = (await connection.query(`SELECT * FROM appointments WHERE id = $1;`,[id])).rows;
+        const findId:number[] = await findAppointmentById(id);
         
         if(findId.length === 0){
             return res.sendStatus(404);
         }
 
-        const deleteOne:QueryResult = await connection.query(`DELETE FROM appointments WHERE id = $1;`,[id]);
+        const deleteOne:QueryResult = await deleteAppointment(id);
 
         return res.sendStatus(200);
     } catch (error) {
@@ -59,12 +61,12 @@ async function deleteAppointment (req:Request, res:Response){
 
 
 // CRUD - UPDATE
-async function updateAppointment(req:Request, res:Response) {
+async function updateAppointment(req:Request, res:Response): Promise<Response<any>>  {
     const { id } = req.params;
     const  status = req.body.status as AppointmentStatus;
 
     try {
-        const findId:number[] = (await connection.query(`SELECT * FROM appointments WHERE id = $1;`,[id])).rows;
+        const findId:number[] = await findAppointmentById(id);
         
         if(findId.length === 0){
             return res.sendStatus(404);
@@ -74,7 +76,7 @@ async function updateAppointment(req:Request, res:Response) {
         if(error){ 
             return res.status(400).send({erro: error.message})
         }     
-        const updateStatus:QueryResult = await connection.query(`Update appointments SET status =$1 WHERE id = $2;`,[status, id]);
+        const updateStatus:QueryResult = await putAppointment(status,id);
         
         return res.sendStatus(200);
     } catch (error) {
@@ -87,7 +89,7 @@ async function updateAppointment(req:Request, res:Response) {
 async function appointmentsByStatus(req:Request, res:Response) {
     const  { status } = req.query as AppointmentStatus;
     try {
-        const filterAppointments: QueryResult<AppointmentEntity> = await connection.query(`SELECT * FROM appointments WHERE status = $1;`,[status]);
+        const filterAppointments: QueryResult<AppointmentEntity> = await findAppointmentByStatus(status);
         const result:AppointmentEntity[] = filterAppointments.rows;    
             
         const { error } = updateStatusSchema.validate(req.query);
@@ -107,10 +109,10 @@ async function appointmentsByStatus(req:Request, res:Response) {
     
 }
 
-async function appointmentsScheduled(req:Request, res: Response) {
+async function appointmentsScheduled(req:Request, res: Response): Promise<Response<any>>  {
 
     try {
-        const appointments: QueryResult = await connection.query(`SELECT COUNT("specialistDoctor") AS "scheduledAppointments", "specialistDoctor" FROM appointments GROUP BY "specialistDoctor";`);
+        const appointments: QueryResult = await getScheduledAppontments();
         const result: QueryResult[] = appointments.rows;
         return res.send(result);
 
@@ -121,4 +123,4 @@ async function appointmentsScheduled(req:Request, res: Response) {
     
 }
 
-export { listAppointments, insertAppointment, deleteAppointment, updateAppointment, appointmentsByStatus, appointmentsScheduled }
+export { listAppointments, insertAppointment, deleteAppointments, updateAppointment, appointmentsByStatus, appointmentsScheduled }
